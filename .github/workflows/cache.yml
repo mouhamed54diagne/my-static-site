@@ -1,0 +1,41 @@
+name: Node.js CI with Caching
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Check out the repository code
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Step 2: Set up Node.js version 18
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    # Step 3: Cache node_modules
+    - name: Cache node_modules
+      id: cache-npm
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    # Step 4: Install dependencies
+    - name: Install dependencies
+      run: npm ci
+      if: steps.cache-npm.outputs.cache-hit != 'true'
+
+    # Step 5: Run tests
+    - name: Run tests
+      run: npm test
